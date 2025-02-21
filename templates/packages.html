@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insurance Packages</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="container">
+    <h2 class="mt-4">Select an Insurance Package</h2>
+
+    <div class="row">
+        {% for package in packages %}
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <img src="{{ package.PackageImage }}" class="card-img-top" alt="{{ package.PackageName }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ package.PackageName }}</h5>
+                        <p class="card-text">{{ package.PackageDescription }}</p>
+                        <a href="{{ url_for('quotation', package_rec_no=package.PackageRecNo) }}" class="btn btn-primary">
+                            Create Quotation
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

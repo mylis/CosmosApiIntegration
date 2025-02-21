@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <style>
+        /* Loader Overlay */
+        #loading-overlay {
+            display: none; /* Ensure it is hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
+            z-index: 9999; /* Ensure it appears on top */
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Ensure the container centers properly */
+        .loading-spinner-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="container">
+
+
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="loading-spinner-container">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Updating quotation...</p>
+        </div>
+    </div>
+
+
+
+    <h2 class="mt-4">{% if quotation_number %}Edit{% else %}Create{% endif %} Quotation</h2>
+
+    <input type="hidden" id="quotation_number" name="quotation_number" value="{{ quotation_number }}">
+
+    {% if quotation_number %}
+        <div class="alert alert-success mt-4">
+            <h4>Quotation Loaded</h4>
+            <p><strong>Quotation Number:</strong> {{ quotation_number }}</p>
+        </div>
+    {% endif %}
+
+    <h3 class="mt-4">Quotation Fields</h3>
+
+    <!-- ✅ Wrap the form fields inside a <form> with id="quotation-form" -->
+    <form id="quotation-form">
+        <div id="form-container">
+            {% include 'form_fields.html' with context %}
+        </div>
+    </form>
+
+    <button type="button" id="update-quote-btn" class="btn btn-primary">Update Quote</button>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("quotation-form");
+        const updateButton = document.getElementById("update-quote-btn");
+        const loadingOverlay = document.getElementById("loading-overlay");
+
+        if (!form) {
+            console.error("Form not found!");
+            return;
+        }
+
+        if (!updateButton) {
+            console.warn("Update button not found!");
+        } else {
+            updateButton.addEventListener("click", function (event) {
+                event.preventDefault();
+                updateQuotation();
+            });
+        }
+
+        // Listen for changes on fields that affect other fields
+        form.addEventListener("change", function (event) {
+            const target = event.target;
+            if (target.dataset.affectsFields === "Yes") {
+                updateQuotation();
+            }
+        });
+
+        function updateQuotation() {
+            const formData = new FormData(form);
+            const updatedFields = {};
+
+            formData.forEach((value, key) => {
+                updatedFields[key] = value;
+            });
+
+            // Show loading overlay
+            loadingOverlay.style.display = "flex";
+
+            fetch("/update_quote", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    quotation_number: document.getElementById("quotation_number")?.value || "",
+                    updated_fields: updatedFields
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.html) {
+                    document.getElementById("form-container").innerHTML = data.html;
+                }
+            })
+            .catch(error => console.error("Error updating quotation:", error))
+            .finally(() => {
+                // Hide loading overlay after API call completes
+                loadingOverlay.style.display = "none";
+            });
+        }
+    });
+    </script>
+
+</body>
+</html>
